@@ -1,4 +1,4 @@
 #!/bin/bash
 
-apt update
+sudo apt update
 docker-compose up -d

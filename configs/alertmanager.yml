@@ -1,8 +1,8 @@
 receivers:
   - name: 'telegram'
     telegram_configs:
-      - bot_token: «fbfsnsfnsfsfsfnfnddhsrhshsr»
-        chat_id: -353535252525  
+      - bot_token: «8011433449:AAHLODujctY4D25rRf8OkU-cd35UqHbxyN0»
+        chat_id: -1039032948 
         send_resolved: true  
 
 route:

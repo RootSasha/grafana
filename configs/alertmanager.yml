@@ -1,45 +1,46 @@
-receivers:
-  - name: 'telegram'
-    telegram_configs:
-      - bot_token: «8011433449:AAHLODujctY4D25rRf8OkU-cd35UqHbxyN0»
-        chat_id: -1039032948 
-        send_resolved: true  
+global:
+  resolve_timeout: 5m
+  # Тут можна додати інші глобальні налаштування, якщо потрібно
+  # наприклад, налаштування SMTP для email сповіщень
+  # smtp_from: 'alertmanager@example.com'
+  # smtp_smarthost: 'localhost:25'
 
+# Секція шаблонів (необов'язково, але часто використовується для кастомізації повідомлень)
+# templates:
+# - '/etc/alertmanager/templates/*.tmpl'
+
+# --- ОСНОВНА СЕКЦІЯ МАРШРУТИЗАЦІЇ ---
+# Має бути тільки ОДИН блок 'route:' на верхньому рівні!
 route:
-  receiver: 'telegram'
+  receiver: 'telegram'             # Отримувач за замовчуванням для всіх сповіщень
+  group_by: ['alertname', 'job']   # Рекомендоване групування сповіщень
+  group_wait: 30s                  # Час очікування перед відправкою першого сповіщення з групи
+  group_interval: 5m               # Інтервал між відправками сповіщень для активної групи
+  repeat_interval: 4h              # Інтервал для повторної відправки активних (не вирішених) сповіщень
+
+  # Вкладені маршрути для більш специфічної обробки
   routes:
-    - receiver: 'telegram'
+    # Цей маршрут обробляє сповіщення з severity "warning" або "critical"
+    - receiver: 'telegram'         # Сповіщення, що відповідають, підуть цьому отримувачу
+      group_wait: 10s              # Специфічний час очікування для цієї групи (з другого блоку 'route')
       matchers:
-        - severity=~"warning|critical|firing"
+        - severity =~ "warning|critical|firing" # Умова для спрацювання цього маршруту
+      # continue: false # За замовчуванням 'false'. Якщо 'true', сповіщення також піде шляхом батьківського маршруту.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-route:
-  receiver: 'telegram'
-  routes:    
-  # All alerts with severity=warning or severity=critical
-  # are dispatched to the telegram receiver.
-  - receiver: 'telegram'
-    group_wait: 10s
-    matchers:
-    - severity=~"warning|critical|firing"
-
+# --- СЕКЦІЯ ОТРИМУВАЧІВ ---
+# Має бути тільки ОДИН блок 'receivers:' на верхньому рівні!
 receivers:
-- name: 'telegram'
-  telegram_configs:
-  - bot_token: "6687837790:AAEWWBV3NZHDft6q64ysU48CpUhMZa-uYvI"
-    chat_id: -370901112
+  - name: 'telegram' # Ім'я отримувача, яке використовується в 'route'
+    telegram_configs:
+      # Використовуємо токен та chat_id з вашого другого блоку,
+      # оскільки там коректніші лапки для токена.
+      # Додаємо 'send_resolved: true' з вашого першого блоку.
+      - bot_token: "6687837790:AAEWWBV3NZHDft6q64ysU48CpUhMZa-uYvI"
+        api_url: 'https://api.telegram.org' # Рекомендовано вказати явно
+        chat_id: -370901112
+        send_resolved: true # Надсилати повідомлення, коли алерт вирішено
+        parse_mode: 'Markdown' # Або 'HTML', для форматування тексту повідомлень
 
+# Ваші коментарі з кінця файлу:
 #  https://api.telegram.org/botINSERT_BOT_ID_HERE/getUpdates - to get chat_id
 #  amtool --alertmanager.url=http://localhost:9093/ alert add alertname="Test alert" severity="warning" job="test-job" - to send test alert
